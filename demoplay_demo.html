@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DemoPlay — Virtual Betting Demo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#eef2ff;font-family:Arial,sans-serif}
+header{background:#121a31;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #293452}
+.logo{font-size:22px;font-weight:800}.demo{font-size:11px;background:#f59e0b;color:#111;padding:5px 8px;border-radius:6px;font-weight:800}
+.wrap{max-width:1050px;margin:auto;padding:18px}.balance{background:linear-gradient(135deg,#182447,#10172d);padding:20px;border-radius:16px;margin-bottom:18px}
+.balance small{color:#aab6d6}.money{font-size:32px;font-weight:800;margin:5px 0 15px}
+button{border:0;border-radius:9px;padding:11px 16px;font-weight:700;cursor:pointer;background:#4f7cff;color:white}.secondary{background:#283555}.danger{background:#b93455}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px}.card{background:#121a31;border:1px solid #293452;border-radius:16px;padding:18px}
+.game{min-height:330px;display:flex;flex-direction:column;justify-content:center;align-items:center;background:radial-gradient(circle at center,#172a55,#0d1428);border-radius:12px}
+.mult{font-size:64px;font-weight:900;color:#65e6ff}.status{margin:8px;color:#aab6d6}
+input{width:100%;padding:12px;border-radius:9px;border:1px solid #344264;background:#0c1326;color:white;margin:8px 0 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:10px;border-bottom:1px solid #293452;text-align:left}
+.notice{background:#241d08;color:#ffd76a;padding:10px;border-radius:9px;font-size:12px;margin-bottom:15px}
+.hidden{display:none}@media(max-width:750px){.grid{grid-template-columns:1fr}.mult{font-size:48px}}
+</style>
+</head>
+<body>
+<header><div class="logo">DemoPlay <span class="demo">DEMO • NO REAL MONEY</span></div><div>👤 Demo User</div></header>
+
+<div class="wrap">
+<div class="notice">⚠️ এটি একটি সম্পূর্ণ ভার্চুয়াল ডেমো। কোনো আসল টাকা, পেমেন্ট বা cash-out হয় না।</div>
+
+<div class="balance">
+<small>Virtual Balance</small>
+<div class="money" id="balance">৳ 5,000.00</div>
+<div class="row">
+<button onclick="deposit()">＋ Demo Deposit</button>
+<button class="secondary" onclick="withdraw()">− Demo Withdraw</button>
+</div>
+</div>
+
+<div class="grid">
+<section class="card">
+<h2>✈️ Aviator — Test Mode</h2>
+<div class="game">
+<div class="mult" id="mult">1.00x</div>
+<div class="status" id="status">Round ready</div>
+<div class="row" style="width:90%;max-width:500px">
+<input id="bet" type="number" min="10" value="100" placeholder="Virtual bet">
+<button onclick="startRound()">Start Demo Round</button>
+<button class="danger" onclick="cashout()">Demo Cash Out</button>
+</div>
+</div>
+</section>
+
+<aside class="card">
+<h2>⚙️ Demo Admin</h2>
+<p style="color:#aab6d6;font-size:13px">শুধু পরীক্ষার জন্য। এখানে পরের demo round-এর multiplier সেট করা যায়।</p>
+<label>Test Multiplier</label>
+<input id="adminMult" type="number" min="1.01" step="0.01" value="2.50">
+<button onclick="setMultiplier()">Set Next Result</button>
+<hr style="border-color:#293452;margin:20px 0">
+<label>Demo Payment Number</label>
+<input id="payNumber" value="01XXXXXXXXX">
+<button class="secondary" onclick="saveNumber()">Save Demo Number</button>
+<p id="saved" style="font-size:12px;color:#7ee2a8"></p>
+</aside>
+</div>
+
+<div class="card" style="margin-top:18px">
+<h2>Recent Demo Transactions</h2>
+<table><thead><tr><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
+<tbody id="tx"></tbody></table>
+</div>
+</div>
+
+<script>
+let balance=5000, nextMult=2.5, currentBet=0, running=false, timer=null;
+
+function money(n){return '৳ '+n.toFixed(2)}
+function render(){document.getElementById('balance').textContent=money(balance)}
+function addTx(type,amt,status='Demo'){let tr=document.createElement('tr');tr.innerHTML=`<td>${type}</td><td>${money(amt)}</td><td>${status}</td>`;document.getElementById('tx').prepend(tr)}
+
+function deposit(){
+ let n=prompt('Demo deposit amount লিখুন:','500');
+ let a=Number(n); if(a>0){balance+=a;render();addTx('Demo Deposit',a)}
+}
+function withdraw(){
+ let n=prompt('Demo withdrawal amount লিখুন:','500');
+ let a=Number(n); if(a>0 && a<=balance){balance-=a;render();addTx('Demo Withdraw',a)}
+ else alert('Invalid virtual amount');
+}
+function setMultiplier(){
+ let x=Number(document.getElementById('adminMult').value);
+ if(x>=1.01){nextMult=x;alert('Next demo result set to '+x.toFixed(2)+'x')}
+}
+function saveNumber(){
+ let n=document.getElementById('payNumber').value.trim();
+ document.getElementById('saved').textContent='Saved demo number: '+n;
+}
+function startRound(){
+ if(running)return;
+ let b=Number(document.getElementById('bet').value);
+ if(b<=0||b>balance){alert('Virtual balance insufficient');return}
+ balance-=b;render();currentBet=b;running=true;
+ document.getElementById('status').textContent='Demo round running…';
+ let m=1;
+ clearInterval(timer);
+ timer=setInterval(()=>{
+   m+=0.05;
+   document.getElementById('mult').textContent=m.toFixed(2)+'x';
+   if(m>=nextMult){clearInterval(timer);running=false;document.getElementById('status').textContent='Test round ended';addTx('Aviator loss',b,'Demo');}
+ },80);
+}
+function cashout(){
+ if(!running||currentBet<=0){return}
+ clearInterval(timer);running=false;
+ let shown=parseFloat(document.getElementById('mult').textContent);
+ let win=currentBet*shown;
+ balance+=win;render();addTx('Aviator demo cash-out',win.toFixed(2),'Demo');
+ document.getElementById('status').textContent='Demo cash-out at '+shown.toFixed(2)+'x';
+ currentBet=0;
+}
+render();
+</script>
+</body>
+</html>
